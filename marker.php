@@ -15,9 +15,12 @@ else
 
 /* Calculate size */
 $size = 15 + min(($scale-500)/3000, 1) * 20;
-$img = imagecreatetruecolor($size, $size);
+$img = imagecreatetruecolor($size+1, $size+1);
 $black = imagecolorallocate($img, 0, 0, 0);
-imagerectangle($img, 0, 0, $size-1, $size-1, $black);
+$trans = imagecolorallocatealpha($img, 0, 255, 0, 127);
+imagecolortransparent($img, $trans);
+imagefill($img, 0, 0, $trans);
+//imagerectangle($img, 0, 0, $size-1, $size-1, $black);
 
 
 /* Scale colours */
@@ -32,7 +35,9 @@ else {
     $col = imagecolorallocate($img, $secondary, $secondary, $primary);
 }
 
-imagefilledrectangle($img, 1, 1, $size-2, $size-2, $col);
+//imagefilledrectangle($img, 1, 1, $size-2, $size-2, $col);
+imagefilledellipse($img, $size/2, $size/2, $size, $size, $col);
+imageellipse($img, $size/2, $size/2, $size, $size, $black);
 
 header("Content-type: image/png");
 imagepng($img);

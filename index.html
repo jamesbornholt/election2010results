@@ -48,10 +48,11 @@ function load_markers(results) {
         if ( results[i]['2pp']['alp'] == 0 && results[i]['2pp']['lnp'] == 0 ) continue;
         prev_pos = pos;
         pos = new google.maps.LatLng(results[i]['loc']['lat'], results[i]['loc']['lng']);
+        var winner = (parseFloat(results[i]['2pp']['alp']) > 50);
         var marker = new google.maps.Marker({
             position: pos,
             map: map,
-            title: results[i]['name'],
+            title: results[i]['name'] + ' (' + (winner ? results[i]['2pp']['alp'] : results[i]['2pp']['lnp']) + '% ' + (winner ? 'ALP' : 'Coalition') + ', ~' + results[i]['2pp']['tot'] + ' votes)',
             icon: "marker.php?v=" + Math.round(parseFloat(results[i]['2pp']['alp'])).toString() + "&s=" + results[i]['2pp']['tot']
         });
         markers.push(marker);
@@ -91,6 +92,9 @@ google.setOnLoadCallback(function() {
         <ul>
             <li>
                 <a href="results.php?id=102" class="electorate-link">Fraser</a>
+            </li>
+            <li>
+                <a href="results.php?id=101" class="electorate-link">Canberra</a>
             </li>
             <li>
                 <a href="results.php?id=194" class="electorate-link">Denison</a>

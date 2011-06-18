@@ -1,1 +1,8 @@
-This was a quick hack I threw together when I thought it would be interesting to visualise results by polling booth in the 2010 Australian federal election. The shade of the markers represent the magnitude of the 2PP result - deep blue represent high Coalition 2PP and deep red represents high ALP 2PP, with lighter shades representing closer 2PP results. The size of the markers represent the relative number of votes cast at that polling booth, so as not to over-emphasise small booths. They should probably be circles because of the way they're scaled.
+This was a quick hack I threw together when I thought it would be interesting
+to visualise results by polling booth in the 2010 Australian federal election.
+
+The shade of a marker represents the magnitude of the 2PP result at that booth
+- deep blue represents high Coalition 2PP and deep red represents high ALP
+2PP, with lighter (gray) shades representing closer 2PP results. The size of a
+marker represents the relative number of votes cast at that polling booth, so
+as not to over-emphasise small booths.
