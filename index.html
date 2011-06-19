@@ -21,14 +21,76 @@ function initialize_map() {
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-/*    for ( var i = 0; i < markers.length; i++ ) {
-        var marker = new google.maps.Marker({
-            position: new google.maps.LatLng(markers[i]['loc']['lat'], markers[i]['loc']['lng']),
-            map: map,
-            title: markers[i]['name'],
-            icon: "http://localhost/~james/elec/marker.php?s=" + markers[i]['2pp']
-        });
-    }*/
+}
+
+var LOW_2PP = 0.5;
+var LOW_PRI = 210;
+var LOW_SEC = 210;
+var LOW_RADIUS = 8;
+var LOW_VOTES = 400;
+var HIGH_2PP = 0.7;
+var HIGH_PRI = 255;
+var HIGH_SEC = 0;
+var HIGH_RADIUS = 20;
+var HIGH_VOTES = 2500;
+
+var markerCache = {};
+
+function clamp(val, min_val, max_val, min_out, max_out) {
+    if ( val <= min_val ) return min_out;
+    if ( val >= max_val ) return max_out;
+    var scale = (val - min_val) / (max_val - min_val);
+    return min_out + scale * (max_out - min_out);
+}
+
+function buildMarker(map, loc, name, tpp) {
+    var alpWin = (tpp['alp'] > 50);
+    var tpp_perc = parseFloat(alpWin ? tpp['alp'] : tpp['lnp']);
+    var tpp_scale = Math.round(tpp_perc)/100;
+    
+    // This is a giant hack; we modulo the vote count to the nearest hundred
+    // on the server side, and 2PP counts are always under 100 (well,
+    // practically, anyway), so this lets us do a cache key by addition.
+    // Of course it's all redundant anyway since JS objects are usually awful...
+    var cacheKey = tpp['tot'] + tpp_scale;
+    var uri;
+    if ( cacheKey in markerCache ) {
+        uri = markerCache[cacheKey];
+    }
+    else {
+        var radius = clamp(tpp['tot'], LOW_VOTES, HIGH_VOTES, LOW_RADIUS, HIGH_RADIUS);
+        var primColour = parseInt(clamp(tpp_scale, LOW_2PP, HIGH_2PP, LOW_PRI, HIGH_PRI));
+        var secColour = parseInt(clamp(tpp_scale, LOW_2PP, HIGH_2PP, LOW_SEC, HIGH_SEC));
+        var colour = 'rgb(' + (alpWin ? primColour : secColour) + ',' + secColour + ',' + (!alpWin ? primColour : secColour) + ')';
+        
+        // Draw onto a canvas.
+        // Credit: http://paul.kinlan.me/using-canvas-to-create-beautiful-custom-marke
+        var canvas = document.createElement("canvas");
+        canvas.width = 2*radius + 3;
+        canvas.height = 2*radius + 3;
+        
+        var context = canvas.getContext('2d');
+        context.strokeStyle = "black";
+        context.fillStyle = colour;
+        
+        context.beginPath();
+        context.arc(radius+1, radius+1, radius, 0, 2*Math.PI, true);
+        context.closePath();
+        context.fill();
+        context.stroke();
+        
+        uri = canvas.toDataURL();
+        markerCache[cacheKey] = uri;        
+    }
+    
+    var marker = new google.maps.Marker({
+        position: loc,
+        map: map,
+        icon: uri,
+        title: name + ' (' + tpp_perc + '% ' + (alpWin ? 'ALP' : 'Coalition') + ', ~' + tpp['tot'] + ' votes)'
+    });
+    
+    return marker;
 }
 
 function load_markers(results) {
@@ -46,16 +108,13 @@ function load_markers(results) {
         if ( typeof results[i]['loc'] === 'undefined' ) continue;
         if ( typeof results[i]['2pp'] === 'undefined' ) continue;
         if ( results[i]['2pp']['alp'] == 0 && results[i]['2pp']['lnp'] == 0 ) continue;
+        
         prev_pos = pos;
         pos = new google.maps.LatLng(results[i]['loc']['lat'], results[i]['loc']['lng']);
-        var winner = (parseFloat(results[i]['2pp']['alp']) > 50);
-        var marker = new google.maps.Marker({
-            position: pos,
-            map: map,
-            title: results[i]['name'] + ' (' + (winner ? results[i]['2pp']['alp'] : results[i]['2pp']['lnp']) + '% ' + (winner ? 'ALP' : 'Coalition') + ', ~' + results[i]['2pp']['tot'] + ' votes)',
-            icon: "marker.php?v=" + Math.round(parseFloat(results[i]['2pp']['alp'])).toString() + "&s=" + results[i]['2pp']['tot']
-        });
+        
+        var marker = buildMarker(map, pos, results[i]['name'], results[i]['2pp']);
         markers.push(marker);
+        
         if ( !bound ) {
             bound = new google.maps.LatLngBounds(pos, pos);
         }
