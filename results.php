@@ -81,7 +81,7 @@ debug("Geocoding addresses.");
 
 foreach ( $polling_places as $id => $details ) {
     debug("\t{$details['name']}");
-    $json = file_get_contents('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($details['address']) . '&sensor=false');
+    $json = file_get_contents('http://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($details['address']) . '&sensor=false&region=au');
     if ( $json ) {
         $geo = json_decode($json, true);
         if ( $geo['status'] == "OK" ) {
