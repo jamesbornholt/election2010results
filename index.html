@@ -52,7 +52,7 @@ function buildMarker(map, loc, name, tpp) {
     // on the server side, and 2PP counts are always under 100 (well,
     // practically, anyway), so this lets us do a cache key by addition.
     // Of course it's all redundant anyway since JS objects are usually awful...
-    var cacheKey = tpp['tot'] + tpp_scale;
+    var cacheKey = tpp['tot'] + tpp_scale + (alpWin ? 100000 : 0);
     var uri;
     if ( cacheKey in markerCache ) {
         uri = markerCache[cacheKey];
