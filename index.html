@@ -13,6 +13,7 @@
 <script type="text/javascript">
 var map;
 var markers = [];
+var polys = [];
 
 function initialize_map() {
     var latlng = new google.maps.LatLng(-34.397, 150.644);
@@ -127,11 +128,47 @@ function load_markers(results) {
     map.fitBounds(bound);
 }
 
+function load_polys(data) {
+    for ( i = 0; i < data.length; i++ ) {
+        console.log(data[i]['name']);
+        var alpWin = (data[i]['winner'] == 'ALP');
+        var tpp_perc = parseFloat(data[i]['2pp']);
+        var tpp_scale = Math.round(tpp_perc)/100;
+        var primColour = parseInt(clamp(tpp_scale, LOW_2PP, HIGH_2PP, LOW_PRI, HIGH_PRI));
+        var secColour = parseInt(clamp(tpp_scale, LOW_2PP, HIGH_2PP, LOW_SEC, HIGH_SEC));
+        var colour = 'rgb(' + (alpWin ? primColour : secColour) + ',' + secColour + ',' + (!alpWin ? primColour : secColour) + ')';
+        
+        var paths = [];
+        var path = [];
+        for ( j = 0; j < data[i]['poly'].length; j++ ) {
+            for ( k = 0; k < data[i]['poly'][j].length; k++ ) {
+                path.push(new google.maps.LatLng(data[i]['poly'][j][k][1], data[i]['poly'][j][k][0]));
+            }
+            paths.push(path);
+            path = [];
+        }
+        
+        
+        var poly = new google.maps.Polygon({
+            map: map,
+            paths: (paths.length == 1 ? paths[0] : paths),
+            fillColor: colour,
+            fillOpacity: 0.5,
+            strokeWeight: 0
+        });
+        console.debug(poly);
+        polys.push(poly);
+    }
+}
+
 google.load('jquery', '1');
 
 google.setOnLoadCallback(function() {
     $(function() {
         initialize_map();
+        jQuery.getJSON('cache/fraser-poly.js', function(data) {
+            load_polys(data);
+        });
         $('.electorate-link').click(function() {
             var url = this.href;
             jQuery.getJSON(url, function(data) {
